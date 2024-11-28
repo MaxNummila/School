@@ -1,0 +1,33 @@
+#include <stdio.h>
+
+int main(int argc, char *argv[]) 
+{
+  //skapar en raknare som räknar mängden tecken, skapar en char tecken för att spara tecknet som behandlas
+  int raknare = 0;
+  char tecken;
+
+  //ifall kommandot inte har ett argument och programmnamn ges felkoden 1
+  if(argc!=2){
+    printf("Antal tecken %d", raknare);
+    return 1;
+  }
+  //Öpnar filen som ges som argument med read
+  FILE *input_file = fopen(argv[1], "r");
+   if (input_file == NULL){
+    printf("Antal tecken %d", raknare);
+    return 2;
+  }  
+  //While loop som går igenom tecknen i filen tills filen tar slut, granskar även om tecknet är en karaktär som ska undvikas och räknar inte med det
+  while ((tecken=fgetc(input_file)) != EOF)
+  {
+    if (tecken != ' ' && tecken != '\n' && tecken != '\r' && tecken != '\t'){
+      raknare++;
+    }
+  }
+
+  fclose(input_file);
+  
+  printf("Antal tecken %d", raknare);
+  
+  return 0;
+}

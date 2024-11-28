@@ -1,0 +1,16 @@
+#include <stdio.h>
+#include <string.h>
+
+int main(int argc, char *argv[]) 
+{
+  //Om det finns flera argument än enbart programmnamn printas "Hej" namn "!"
+  if (argc > 1){
+    printf("Hej %s!\n", argv[1]);
+  }
+  //Annors printas enbart "Hej!"
+  else{
+    printf("Hej!\n");
+  }
+  // Skriv din kod här
+  return 0;
+}

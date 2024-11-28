@@ -1,0 +1,42 @@
+#include <stdio.h>
+#include <ctype.h>
+
+int main(int argc, char *argv[]) 
+{
+  //Skapar en räknare lista som har 26 platser, en för varje bokstav, och den finns till för att hålla koll på hur ofta en viss bokstav förekommer och en tecken för att ha en plats att spara tekcnet i fråga
+  int raknare[26] = {0};
+  char tecken;
+
+  //Ifall det inte finns exakt ett argument och programmets namn är det fel, och returnerad felkod 1
+  if(argc != 2){
+    return 1;
+  }
+
+//Öpnar filen som ges som argument med read
+  FILE *input_file = fopen(argv[1], "r");
+  if (input_file == NULL){
+    return 2;
+  } 
+
+//Går igenom filen tecken för tecken och slutar då filen tar slut, inne i loopen granskas om tecknet är en bokstav, gör det sedan till liten bokstav ifall det inte är det
+//och sparar sedan tecknet till dess plats i arrayn raknare. Efter att filen är slut stängs filen
+  while((tecken = fgetc(input_file)) !=EOF ){
+    if(isalpha(tecken)){
+      tecken = tolower(tecken);
+      raknare[tecken-97]++;
+    }
+  }
+  fclose(input_file);
+
+//Skapar en fil som sparar informationen som fåtts av input filen
+  FILE *output_file = fopen("resultat.txt", "w");
+//Går igenom raknare arrayn och för varje bokstav lägger till dess respektive mängd i filen. Stänger filen efter att det har gjorts.
+  for(int i=0; i<26;i++){
+    if(raknare[i] > 0){
+      printf("%c %d\n", 'a' + i, raknare[i]);
+    }
+  }
+  fclose(output_file);
+
+  return 0;
+}
