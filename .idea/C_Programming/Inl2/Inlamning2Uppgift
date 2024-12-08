@@ -1,0 +1,119 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <unistd.h>
+
+static int cmpstringp(const void *p1, const void *p2)
+{
+/* The actual arguments to this function are 'pointers to pointers to char', but strcmp(3) arguments are 'pointers to char', hence the following cast plus dereference */
+    return strcmp(* (char * const *) p1, * (char * const *) p2);
+}
+
+static int write_words(const char **words, size_t words_len, const char *filename)
+{
+    int ret;
+    FILE *outfile;
+    int i;
+    outfile = fopen(filename, "wx");
+
+    if (outfile == NULL)
+    {
+        ret = -1;
+        goto exit1;
+    }
+
+    for (i = 0; i < words_len; i++)
+    {
+        if (fprintf(outfile, "%s\n", words[i]) < 0)
+        {
+            ret = -1;
+            goto exit2;
+        }
+    }
+
+    ret = 0;
+
+exit2:
+    fclose(outfile);
+
+exit1:
+    return ret;
+}
+
+int main()
+{
+    char *linep, *wordp, **words;
+    size_t line_sz, words_sz, words_len;
+    ssize_t ret;
+    size_t lineCount = 0;
+
+    words_sz = 10;
+    words_len = 0;
+    words = NULL;
+
+    words = realloc(words, words_sz * sizeof(char*));
+
+    if (words == NULL)
+    {
+        perror("realloc()");
+        printf("Read %zu rows and %zu words\n", lineCount, words_len);
+        return -1;
+    }
+
+    linep = NULL;
+
+    while ((ret = getline(&linep, &line_sz, stdin)) >= 0)
+    {
+        lineCount++;
+
+        for (int i = 0; i < line_sz; i++)
+            linep[i] = tolower((unsigned char)linep[i]);
+
+        while ((wordp = strsep(&linep, "1234567890()\"\' &$,.!?:[];\n\r\t")) != NULL)
+        {
+            if (wordp == NULL)
+                continue;
+
+            if (wordp[0] == '\0')
+                continue;
+
+            words[words_len++] = strdup(wordp);
+
+            while (words_len >= words_sz)
+            {
+                words_sz += 10;
+                words = realloc(words, words_sz * sizeof(char*));
+                if(words == NULL){
+                    perror("realloc()");
+                    printf("Read %zu rows and %zu words\n", lineCount, words_len);
+                    return -1;
+                }
+            }
+        }
+
+        free(linep);
+        linep = NULL;
+    }
+
+    qsort(words, words_len, sizeof(char*), cmpstringp);
+
+    if(write_words((const char**)words, words_len, "output.txt") != 0){
+        for (int i = 0; i < words_len; i++)
+        {
+            free(words[i]);
+        }
+        free(words);
+        printf("Read %zu rows and %zu words\n", lineCount, words_len);
+        return 1;
+    }
+
+    for(int i = 0; i < words_len; i++){
+        free(words[i]);
+    }
+
+    free(words);
+    printf("Read %zu rows and %zu words\n", lineCount, words_len);
+
+    return 0;
+}
