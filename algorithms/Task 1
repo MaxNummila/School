@@ -1,0 +1,194 @@
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+
+import javax.swing.UIManager;
+import javax.swing.JOptionPane;
+import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
+
+import java.util.Arrays;
+import java.util.Random;
+
+
+public class Ex1 {
+    private static final int WIDTH = 800;  // Size of the window in pixels
+    private static final int HEIGHT = 800;
+
+    static int cells=20;    // The size of the maze is cells*cells (default is 20*20)
+
+    public static void main(String[] args) {
+
+        // Get the size of the maze from the command line
+        if (args.length > 0) {
+            try {
+                cells = Integer.parseInt(args[0]);  // The maze is of size cells*cells
+            } catch (NumberFormatException e) {
+                System.err.println("Argument " + args[0] + " should be an integer");
+                System.exit(-1);
+            }
+        }
+        // Check that the size is valid
+        if ( (cells <= 1) || (cells > 100) ) {
+            System.err.println("Invalid size, must be between 2 and 100 ");
+            System.exit(-1);
+        }
+        Runnable r = new Runnable() {
+            public void run() {
+                // Create a JComponent for the maze
+                MazeComponent mazeComponent = new MazeComponent(WIDTH, HEIGHT, cells);
+                // Change the text of the OK button to "Close"
+                UIManager.put("OptionPane.okButtonText", "Close");
+                JOptionPane.showMessageDialog(null, mazeComponent, "Maze " + cells + " by " + cells,
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        };
+        SwingUtilities.invokeLater(r);
+    }
+}
+
+class MazeComponent extends JComponent {
+    protected int width;
+    protected int height;
+    protected int cells;
+    protected int cellWidth;
+    protected int cellHeight;
+    Random random;
+
+    // Draw a maze of size w*h with c*c cells
+    MazeComponent(int w, int h, int c) {
+        super();
+        cells = c;                // Number of cells
+        cellWidth = w/cells;      // Width of a cell
+        cellHeight = h/cells;     // Height of a cell
+        width =  c*cellWidth;     // Calculate exact dimensions of the component
+        height = c*cellHeight;
+        setPreferredSize(new Dimension(width+1,height+1));  // Add 1 pixel for the border
+    }
+
+    public void paintComponent(Graphics g) {
+        g.setColor(Color.yellow);                    // Yellow background
+        g.fillRect(0, 0, width, height);
+
+        // Draw a grid of cells
+        g.setColor(Color.blue);                 // Blue lines
+        for (int i = 0; i<=cells; i++) {        // Draw horizontal grid lines
+            g.drawLine (0, i*cellHeight, cells*cellWidth, i*cellHeight);
+        }
+        for (int j = 0; j<=cells; j++) {       // Draw verical grid lines
+            g.drawLine (j*cellWidth, 0, j*cellWidth, cells*cellHeight);
+        }
+
+        // Mark entry and exit cells
+        paintCell(0,0,Color.green, g);               // Mark entry cell
+        drawWall(-1, 0, 2, g);                       // Open up entry cell
+        paintCell(cells-1, cells-1,Color.pink, g);   // Mark exit cell
+        drawWall(cells-1, cells-1, 2, g);            // Open up exit cell
+
+        g.setColor(Color.yellow);                 // Use yellow lines to remove existing walls
+        createMaze(cells, g);
+    }
+
+    private void createMaze (int cells, Graphics g) {
+
+        // This is what you write
+        //Creates an array based on the amount of cells in the maze and then makes their values -1
+        //Then by giving each cell an ID with the formula i = x + cells*y one can find any cell in the array with cellsArr[i]
+        //Also creates an integer which keeps track of succesful unions since ones with outside walls will break
+        int totalCells = cells * cells;
+        int[] cellsArr = new int[totalCells];
+        Arrays.fill(cellsArr, -1);
+        int succesfulUnions = 0;
+        random = new Random();
+
+        while(succesfulUnions < totalCells - 1) {
+
+            //Uses the random module to create a new cell x and y coordinate and a random wall from said cell
+            int randomX = random.nextInt(cells);
+            int randomY = random.nextInt(cells);
+            int wall = random.nextInt(4);
+
+            //Then creates duplicates of the coordinates so that depending on the walls number, it can add +1 to x or y to get the coordinates for the neighbor cell
+            int neighborX = randomX;
+            int neighborY = randomY;
+            switch (wall) {
+                case 0: neighborX = randomX -1; break;
+                case 1: neighborY = randomY - 1; break;
+                case 2: neighborX = randomX + 1; break;
+                case 3: neighborY = randomY + 1; break;
+            }
+            //If the neighbor cell is not actually a cell it jumps to the next iteration of the while loop, so it takes another random cell
+            if (neighborX < 0 || neighborY < 0 || neighborX >= cells || neighborY >= cells) {
+                continue;
+            }
+            //If the neighbor exists create an integer with the index of the cell and neighbor cell in the cellsArr, so that one can run a find on them
+            int cellID = randomX + cells * randomY;
+            int newCellID = neighborX + cells * neighborY;
+
+            //The find for the cell and newCell since I didn't know if I was allowed to write it elsewhere it is in the form of two while loops instead of a method
+            //Takes the index of the random cell to check the value stored in the array for it. If said value is > 0, so not the root, it jumps to the stored index in array to check if it is the root.
+            //After finding the root it makes cellID = index of the root in cellsArr
+            while (cellsArr[cellID] >= 0) {
+                cellID = cellsArr[cellID];
+            }
+            //Same for the neighbor
+            while (cellsArr[newCellID] >= 0) {
+                newCellID = cellsArr[newCellID];
+            }
+
+            //Union method also here for same reason, it pretty much just checks the indexes which the find gives and
+            //compares them, and if they are not a part of the same set (Pointing at the same index) it then makes the one with the more negative value the
+            //root, and makes the other root now instead store the index of the new root and adds the value of it to the new root. It also paints the wall yellow and keeps track of succesful unions.
+            if(cellID != newCellID) {
+                if(cellsArr[cellID] < cellsArr[newCellID]) {
+                    cellsArr[cellID] += cellsArr[newCellID];
+                    cellsArr[newCellID] = cellID;
+                    drawWall(randomX,  randomY, wall, g);
+                    succesfulUnions++;
+                } else if (cellsArr[newCellID] < cellsArr[cellID]) {
+                    cellsArr[newCellID] += cellsArr[cellID];
+                    cellsArr[cellID] = newCellID;
+                    drawWall(randomX,  randomY, wall, g);
+                    succesfulUnions++;
+                } else  {
+                    cellsArr[cellID] += cellsArr[newCellID];
+                    cellsArr[newCellID] = cellID;
+                    drawWall(randomX,  randomY, wall, g);
+                    succesfulUnions++;
+                }
+            }
+        }
+
+    }
+
+
+    // Paints the interior of the cell at postion x,y with colour c
+    private void paintCell(int x, int y, Color c, Graphics g) {
+        int xpos = x*cellWidth;    // Position in pixel coordinates
+        int ypos = y*cellHeight;
+        g.setColor(c);
+        g.fillRect(xpos+1, ypos+1, cellWidth-1, cellHeight-1);
+    }
+
+
+    // Draw the wall w in cell (x,y) (0=left, 1=up, 2=right, 3=down)
+    private void drawWall(int x, int y, int w, Graphics g) {
+        int xpos = x*cellWidth;    // Position in pixel coordinates
+        int ypos = y*cellHeight;
+
+        switch(w){
+            case (0):       // Wall to the left
+                g.drawLine(xpos, ypos+1, xpos, ypos+cellHeight-1);
+                break;
+            case (1):       // Wall at top
+                g.drawLine(xpos+1, ypos, xpos+cellWidth-1, ypos);
+                break;
+            case (2):      // Wall to the right
+                g.drawLine(xpos+cellWidth, ypos+1, xpos+cellWidth, ypos+cellHeight-1);
+                break;
+            case (3):      // Wall at bottom
+                g.drawLine(xpos+1, ypos+cellHeight, xpos+cellWidth-1, ypos+cellHeight);
+                break;
+        }
+    }
+}
