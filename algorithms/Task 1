@@ -125,7 +125,7 @@ class MazeComponent extends JComponent {
             int cellID = randomX + cells * randomY;
             int newCellID = neighborX + cells * neighborY;
 
-            //The find for the cell and newCell since I didn't know if I was allowed to write it elsewhere it is in the form of two while loops instead of a method
+            //The find for the cell and newCell in the form of two while loops instead of a method
             //Takes the index of the random cell to check the value stored in the array for it. If said value is > 0, so not the root, it jumps to the stored index in array to check if it is the root.
             //After finding the root it makes cellID = index of the root in cellsArr
             while (cellsArr[cellID] >= 0) {
@@ -136,7 +136,7 @@ class MazeComponent extends JComponent {
                 newCellID = cellsArr[newCellID];
             }
 
-            //Union method also here for same reason, it pretty much just checks the indexes which the find gives and
+            //Union method , it checks the indexes which the find gives and
             //compares them, and if they are not a part of the same set (Pointing at the same index) it then makes the one with the more negative value the
             //root, and makes the other root now instead store the index of the new root and adds the value of it to the new root. It also paints the wall yellow and keeps track of succesful unions.
             if(cellID != newCellID) {
