@@ -4,8 +4,7 @@ from scapy.utils import RawPcapReader
 
 
 def read_file() -> RawPcapReader:
-    # OBS! Kom ihåg att filen heter 4SICS-GeekLounge-151021-minimized.pcap
-    return RawPcapReader("4SICS-GeekLounge-151021-minimized.pcap")
+    return RawPcapReader("XXX.pcap")
 
 
 def search_for_ports(pcap_reader: RawPcapReader) -> list:
