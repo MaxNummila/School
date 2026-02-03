@@ -6,8 +6,7 @@ import ipaddress
 
 
 def read_file() -> RawPcapReader:
-    # OBS! Kom ihåg att filen heter 4SICS-GeekLounge-151021-minimized.pcap
-    return RawPcapReader("4SICS-GeekLounge-151021-minimized.pcap")
+    return RawPcapReader("xxx.pcap")
 
 def search_for_ips(pcap_reader: RawPcapReader) -> list:
     suspektaNet = ipaddress.ip_network("192.168.2.0/24")
